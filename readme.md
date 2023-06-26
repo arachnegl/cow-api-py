@@ -1,58 +1,21 @@
 # Cow API
 
-## Dev
+## Quick start
 
-### API running on host
-Start the server on devevelopers' machine:
+A recent version of docker desktop which includes docker compose should be installed.
 
-```bash
-uvicorn cows.main:app --reload
-
-```
-
-### with docker compose
-
-see `makefile` for full list of commands.
-
-Please ensure the docker daemon is already running on your dev pc.
+Note this was developped on a MacAir M1.
 
 ```bash
 make start
-
+#  to stop: make stop
 ```
-
-### code qa
-
-A variety of code quality checks are implemented using `pre-commit`.
-
-Do ensure you have it installed and initiated before development work.
-
-You only need to do the following once:
-
-```
-pip install pre-commit
-pre-commit install
-
-```
-Once installed you can run all the checks outside of making a commit with:
-
-```
-pre-commit run -a
-```
-
-Note that executing `Pyright` from within `pre-commit` is not trivial.
-It requires `node.js` to be installed. You also need to specify the virtual
-environment used in the `pyrightconfig.json` file.
-
-For this reason it is commented out.
 
 ## API UI documentation
-
 
 Open api docs can be found with two flavours of UI:
   - [swwagger](http://localhost:8000/docs)
   - [redoc](http://localhost:8000/redoc)
-
 
 
 ## API CLI documentation
@@ -60,7 +23,9 @@ Open api docs can be found with two flavours of UI:
 Here is a brief overview of what can be executed. Please refer to the APU UI section
 for a better user experience and with the API possibly more up to date.
 
-Create a cow:
+
+## cow create
+
 
 ```bash
 curl -X POST -H "content-type: application/json" -d '{
@@ -84,6 +49,26 @@ curl -X POST -H "content-type: application/json" -d '{
     },
     "has_calves": true
 }' http://localhost:8000/cows
+
+```
+
+### cow update
+
+```bash
+curl -X PUT -H "content-type: application/json" -d '{
+    "name": "jane",
+    "weight": {
+        "mass_kg": 100,
+        "last_measured": "2023-11-02T11:15:00.000000"
+    }
+}' http://localhost:8000/cows/1
+
+```
+
+### cow filter
+
+```bash
+curl -X PUT -H "content-type: application/json" http://localhost:8000/cows?sex=Female
 
 ```
 
@@ -145,3 +130,55 @@ Note there is nothing stopping us from running multiple instances of the app to 
 sources:
     - overview [eurostat](https://ec.europa.eu/eurostat/web/products-eurostat-news/-/ddn-20220517-2)
     - bovine [eurostat](https://ec.europa.eu/eurostat/databrowser/view/APRO_MT_LSCATL/default/table?lang=en)
+
+
+## Dev
+
+### API running on host
+
+Start the server on devevelopers' machine:
+
+```bash
+uvicorn cows.main:app --reload
+
+```
+
+### with docker compose
+
+see `makefile` for full list of commands.
+
+Please ensure the docker daemon is already running on your dev pc.
+
+```bash
+make start
+
+```
+
+### code qa
+
+A variety of code quality checks are implemented using `pre-commit`.
+
+Do ensure you have it installed and initiated before development work.
+
+You only need to do the following once:
+
+```
+pip install pre-commit
+pre-commit install
+
+```
+Once installed you can run all the checks outside of making a commit with:
+
+```
+pre-commit run -a
+```
+
+Note for `Pyright` to run within `pre-commit` requires configuration that is specific
+to how the dev manages their virtual environments.
+Specify the path to your environment in the `pyrightconfig.json` file.
+
+For this reason the check is commented out in `.pre-commit-config.yaml`.
+
+### tests
+
+TODO

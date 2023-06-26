@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from pydantic import validator
 
 
-class BaseSchema(BaseModel):
+class _Base(BaseModel):
     class Config:
         validate_assignment = True
 
@@ -17,36 +17,51 @@ class BaseSchema(BaseModel):
             return value.replace(tzinfo=None)
         return value
 
+    @classmethod
+    def _flatten(cls, a: dict, prefix="") -> dict:
+        res = {}
+        for k, v in a.items():
+            if isinstance(v, dict):
+                nested = cls._flatten(v, prefix=f"{k}_")
+                for fk, fv in nested.items():
+                    res[fk] = fv
+            else:
+                res[f"{prefix}{k}"] = v
+        return res
 
-class _CowSchemaWeight(BaseSchema):
+    def flatten(self) -> dict:
+        return self._flatten(self.dict(exclude_unset=True))
+
+
+class _Weight(_Base):
     mass_kg: int
     last_measured: datetime
 
 
-class _CowSchemaMilkProduction(BaseSchema):
+class _MilkProduction(_Base):
     last_milk: datetime
     cron_schedule: str
     amount_l: int
 
 
-class _CowSchemaFeeding(BaseSchema):
+class _Feeding(_Base):
     amount_kg: int
     cron_schedule: str
     last_measured: datetime
 
 
-class CowSchemaDelete(BaseSchema):
+class Delete(_Base):
     id: int
 
 
-class CowSchemaBase(BaseSchema):
+class Base(_Base):
     name: str
     sex: str
     birthdate: datetime
     condition: str
-    weight: _CowSchemaWeight
-    feeding: _CowSchemaFeeding
-    milk_production: _CowSchemaMilkProduction
+    weight: _Weight
+    feeding: _Feeding
+    milk_production: _MilkProduction
     has_calves: bool
 
     @validator("sex")
@@ -57,11 +72,11 @@ class CowSchemaBase(BaseSchema):
         return v
 
 
-class CowSchemaPost(CowSchemaBase):
+class Post(Base):
     pass
 
 
-class CowSchemaGet(CowSchemaBase):
+class Get(Base):
     id: int
 
     @classmethod
@@ -73,16 +88,16 @@ class CowSchemaGet(CowSchemaBase):
             birthdate=row.birthdate,
             condition=row.condition,
             has_calves=row.has_calves,
-            feeding=_CowSchemaFeeding(
+            feeding=_Feeding(
                 amount_kg=row.feeding_amount_kg,
                 cron_schedule=row.feeding_cron_schedule,
                 last_measured=row.feeding_last_measured,
             ),
-            weight=_CowSchemaWeight(
+            weight=_Weight(
                 mass_kg=row.weight_mass_kg,
                 last_measured=row.weight_last_measured,
             ),
-            milk_production=_CowSchemaMilkProduction(
+            milk_production=_MilkProduction(
                 last_milk=row.milk_production_last_milk,
                 cron_schedule=row.milk_production_cron_schedule,
                 amount_l=row.milk_production_amount_l,
@@ -90,12 +105,12 @@ class CowSchemaGet(CowSchemaBase):
         )
 
 
-class CowSchemaPut(BaseModel):
-    id: int
+class Put(_Base):
+    # TODO PUT veresion of each nested schema
     name: Optional[str]
     sex: Optional[str]
     birthdate: Optional[datetime]
     condition: Optional[str]
-    weight: Optional[_CowSchemaWeight]
-    feeding: Optional[_CowSchemaFeeding]
-    milk_production: Optional[_CowSchemaMilkProduction]
+    weight: Optional[_Weight]
+    feeding: Optional[_Feeding]
+    milk_production: Optional[_MilkProduction]

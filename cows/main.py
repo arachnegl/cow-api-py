@@ -1,8 +1,11 @@
 import logging
 
+import sqlalchemy
 from fastapi import FastAPI
 
 from cows.db import db
+from cows.db import dialect
+from cows.db import metadata
 from cows.routes import router
 
 
@@ -35,6 +38,12 @@ app = FastAPI(
 @app.on_event("startup")
 async def startup():
     await db.connect()
+
+    for table in metadata.tables.values():
+        schema = sqlalchemy.schema.CreateTable(table, if_not_exists=True)
+        query = str(schema.compile(dialect=dialect))
+        await db.execute(query=query)
+
     log.info("db connected")
 
 

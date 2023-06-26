@@ -1,4 +1,4 @@
 {
   "venvPath" : ".",
-  "venv": "/Users/greg/.pyenv/versions/3.10.11/envs/cow"
+  "venv": ".venv"
 }
